@@ -1,0 +1,10 @@
+# Web scraping
+selenium==4.24.0
+webdriver-manager==4.0.2
+
+# Apache Airflow - ОБНОВЛЕННАЯ ВЕРСИЯ
+apache-airflow==2.10.4
+
+# Utilities
+pandas==2.2.2
+python-dateutil==2.9.0

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Airflow
+airflow.cfg
+airflow.db
+airflow-webserver.pid
+logs/
+standalone_admin_password.txt
+webserver_config.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data (опционально - если не хотите загружать данные в Git)
+# data/*.json
+# data/*.db
+
+# OS
+.DS_Store
+Thumbs.db
+EOF
