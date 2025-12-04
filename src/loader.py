@@ -42,51 +42,59 @@ def init_db(db_path: Path):
     print("[db] database initialized")
 
 
-def insert_records(db_path: Path, records: list[dict], retries=3, delay=2):
-    """Insert cleaned records into SQLite with retry logic and logging."""
+def insert_records(db_path: Path, records: list[dict], retries: int = 3, delay: int = 2):
+    from sqlite3 import connect
+    import time
     for attempt in range(1, retries + 1):
         try:
-            conn = sqlite3.connect(db_path)
+            conn = connect(str(db_path))
             cur = conn.cursor()
-            
             for e in records:
-                tags_str = ",".join(e.get("tags", []))  # join list to comma text
-                cur.execute("""
+                tags_str = ",".join(e.get("tags", []))
+
+                # Consequence: column order must match table definition
+                # If order is wrong → rows store incorrect values or fail PK constraint.
+
+                cur.execute(
+                    """
                     INSERT OR REPLACE INTO events (
-                        id, title, url, category, min_price, partner,
+                        id, title, url, category, partner,
                         views, date, time, address, description,
-                        publication_date, tags
+                        publication_date, tags, min_price
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    e["id"],
-                    e["title"],
-                    e["url"],
-                    e.get("category"),
-                    e.get("min_price"),
-                    e.get("partner"),
-                    e.get("views"),
-                    e.get("date"),
-                    e.get("time"),
-                    e.get("address"),
-                    e.get("description"),
-                    e.get("publication_date"),
-                    tags_str
-                ))
-            
+                    """,
+                    (
+                        e["id"],
+                        e["title"],
+                        e["url"],
+                        e.get("category"),
+                        e.get("partner"),
+                        e.get("views"),
+                        e.get("date"),
+                        e.get("time"),
+                        e.get("address"),
+                        e.get("description"),
+                        e.get("publication_date"),
+                        tags_str,
+                        e.get("min_price"),
+                    ),
+                )
             conn.commit()
             conn.close()
             print("[db] all records inserted successfully")
             break
-            
         except Exception as err:
+            # Consequence: if you catch too broadly → hides root cause, harder debugging
+            # Production impact: repeated DAG failures without clear reason in logs.
+
             print(f"[db] insert attempt {attempt} failed: {type(err).__name__}")
-            if 'conn' in locals():
+            if "conn" in locals():
                 conn.close()
-            
             if attempt < retries:
                 time.sleep(delay)
             else:
                 raise err
+
 
 
 def load_cleaned(path: Path):
@@ -128,3 +136,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
